@@ -6,6 +6,8 @@ A wrapper for nodejs official module 'cluster'. This will save your ass from the
 
 ### **[English Document Is Here](https://github.com/dinsio/node-multi-process/blob/master/README.md)**
 
+<div style="height:20px;"></div>
+
 ## **官方自带的 cluster 模块 API 太烂了!**
 
 为什么我说 nodejs 官方自带的 cluster 模块 API 太烂了？这是一个很长的故事，如果你感兴趣可以点下边的链接进去看看。
@@ -14,17 +16,19 @@ A wrapper for nodejs official module 'cluster'. This will save your ass from the
 
 或者你就直接继续往下看 multi-process 的使用方法吧！
 
+<div style="height:20px;"></div>
+
 ## **multi-process 的安装**
 
-~~~
-npm install multi-process
+> npm install multi-process
 
 或者
 
-yarn add multi-process
-~~~
+> yarn add multi-process
 
-请注意 multi-process 这个包 ***只能在 nodejs 下使用!*** 至于 nodejs 版本倒是没什么特别的要求，因为我这里只是重新封装了 cluster，并无其它依赖，而 cluster 很久以前就出现在 nodejs 的早期版本中了，所以基本没有限制。
+请注意 multi-process 这个包 ***只能在 nodejs 下使用!*** 至于 nodejs 版本倒是没什么特别的要求，因为我这里只是重新封装了 cluster，并无其它依赖，而 cluster 很久以前就出现在 nodejs 的早期版本中了。但是考虑到 message 事件回调函数的参数一致性，***nodejs 6.0+ 是必须的***。
+
+<div style="height:20px;"></div>
 
 ## **怎么用？**
 
@@ -39,10 +43,11 @@ const multi_process = require('multi-process')
 
 if (multi_process.current.isMaster) {
 
-    multi_process.master.on('message', function(worker,obj){
+    let master = multi_process.current
+    master.on('message', function(worker,obj){
         console.log('master received from worker ' + worker.id + ' :',obj)
         console.log('master send msg back to worker ' + worker.id)
-        multi_process.master.sendMsg2Worker('456',worker)
+        master.sendMsg2Worker('456',worker)
     })
 
     let worker = multi_process.createWorker()
@@ -51,12 +56,13 @@ if (multi_process.current.isMaster) {
 
 if (multi_process.current.isWorker) {
 
-    console.log('worker',multi_process.worker.id,'created')
-    multi_process.worker.on('message', function(msg){
-        console.log('worker ' + multi_process.worker.id + ' received:',msg)
+    let worker = multi_process.current
+    console.log('worker',worker.id,'created')
+    worker.on('message', function(msg){
+        console.log('worker ' + worker.id + ' received:',msg)
     })
 
-    multi_process.worker.sendMsg2Master('123')
+    worker.sendMsg2Master('123')
 }
 ~~~
 
@@ -89,6 +95,8 @@ multi_process.onWorkerRun(function(worker){
 ~~~
 
 就像你看到的那样，我唯一做的一件事就是让代码更语义化更有逻辑了，希望你也喜欢这个风格
+
+<div style="height:20px;"></div>
 
 ## **真实用例 - 斐波那契数列**
 
@@ -144,50 +152,106 @@ multi_process.onWorkerRun(function(worker){
 
 #### 结果: 大约耗时 25s, 性能表现有了非常明显的提升！
 
+<div style="height:20px;"></div>
+
 ## **My APIS**
 
 首先说明一下，我并没有对官方自带的 cluster 进行太多改动。只是给它重新梳理了一下 api，加入了一些属性、方法、引用，使得它看起来更加语义化和符合直觉。
 
 看这里!
 
-### multi_process
+当你在你的代码中执行 require('multi-process') 的时候，你实际上得到了一个 [MultiProcess](#multiprocess) 的实例，而它实际上是一个多进程管理器，API 如下：
 
-- 属性
+<div style="height:10px;"></div>
+<div id="multiprocess" style="height:1px;"></div>
 
-  - isMaster - 跟 cluster.isMaster 是一样的
-  - isWorker - 跟 cluster.isWorker 是一样的
-  - current - 获得当前进程的实例
-    - 属性
-      - isMaster - 标记当前进程是否是个 master
-      - isWorker - 标记当前进程是否是个 worker
-  - master - 只有当前进程是 master 的时候，你才能访问到这个属性
-    - 属性
-      - id - null
-      - isMaster - true
-      - isWorker - false
-    - 方法
-      - sendMsg2Worker(msg,worker) - 发送消息到 worker 进程
-        - msg - Object - 消息体，可以是 object
-        - worker - Worker - 要发送的 worker 对象
-  - worker - 只有当前进程是 master 的时候，你才能访问到这个属性
-    - 属性
-      - id - 当前 worker 进程的 id
-      - isMaster - false
-      - isWorker - true
-    - methods
-      - sendMsg2Master(msg) - 发送消息到 master 进程
-        - msg - Object - 消息体
-  - cluster - 这里维持了一个对自带 cluster 的引用, 以防万一你用到它
+### **MultiProcess 类**
 
-- 方法
+- #### 属性
+  - current - [MasterProcess](#masterprocess) | [WorkerProcess](#workerprocess) - 运行时当前进程的实例
+  - settings - 同 [cluster.settings](https://nodejs.org/api/cluster.html#cluster_cluster_settings)
+  - workers - 同 [cluster.workers](https://nodejs.org/api/cluster.html#cluster_cluster_workers) - 这里存储了当前所有的 worker 进程实例
+  - originalCluster - [Cluster](https://nodejs.org/api/cluster.html#cluster_cluster) - 它是我们引用的原始 cluster 对象，放在这里以备万一你用到
 
-  - createWorker() - 创建一个 worker 进程
-  - onMasterRun(callback) - 给 master 进程注册回调函数
-    - callback(master) - Function - 当 master 进程创建成功之后就会执行这一函数
-      - master - 被创建出来的 master 进程实例
-  - onWorkerRun(callback) - 给 worker 进程注册回调函数
-    - callback(worker) - Function - 当 worker 进程创建成功之后就会执行这一函数
-      - worker - 被创建出来的 worker 进程实例
+- #### 方法
+  - createWorker() - 同 [cluster.fork()](https://nodejs.org/api/cluster.html#cluster_cluster_fork_env) - 创建一个新的 worker 进程
+    - 返回值 - [cluster.Worker](https://nodejs.org/api/cluster.html#cluster_class_worker) - 新的进程实例
+  - setupProcess() - 同 [cluster.setupMaster()](https://nodejs.org/api/cluster.html#cluster_cluster_fork_env)
+  - disconnect() - 同 [cluster.disconnect()](https://nodejs.org/api/cluster.html#cluster_cluster_disconnect_callback) - 将会断开所有 worker 进程与 master 进程的连接
+  - killWorker(id[,signal]) - 根据 id 杀掉一个 worker 进程
+    - id - String - worker 进程 id
+    - signal - String - [signal parameter in kill()](https://nodejs.org/api/cluster.html#cluster_worker_kill_signal_sigterm)
+  - onMasterRun(callback) - 给 master 进程注册一个处理器，当 master 进程开始时执行
+    - callback(master) - Function - 你想要在 master 进程开始时执行的代码
+      - master - 我们当前的 master 进程实例
+  - onWorkerRun(callback) - 给 worker 进程注册一个处理器，当每一个 worker 进程开始时执行
+    - callback(worker) - Function - 你想要在 worker 进程开始时执行的代码
+      - worker - 我们当前的 worker 进程实例
+
+- #### 事件
+  - on('create',(worker)=>{}) - 多进程管理器开始创建一个新的 worker 进程
+    - worker - [cluster.Worker](https://nodejs.org/api/cluster.html#cluster_class_worker) - 新创建出来的 worker 实例
+  - on('setup',(settings)=>{}) - 多进程管理器对进程进行设置
+    - settings - [cluster.settings](https://nodejs.org/api/cluster.html#cluster_cluster_settings) - 设置的内容
+  - on('disconnect',()=>{}) - 所有 worker 进程都已断开连接
+
+<div style="height:10px;"></div>
+<div id="masterprocess" style="height:1px;"></div>
+
+### **MasterProcess 类**
+
+- #### 属性
+  - id - Null - 这里你会得到一个 null
+  - isMaster - Boolean - 当然是 true 了
+  - isWorker - Boolean - 当然是 false 了
+
+- #### 方法
+  - sendMsg2Worker(msg,worker) - 给指定 worker 进程发送消息
+    - msg - Object - 要发送的消息内容
+    - worker - [cluster.Worker](https://nodejs.org/api/cluster.html#cluster_class_worker) - 消息发送对象
+    - returns - Boolean
+
+- #### 事件
+  - on('message',(worker,msg)=>{}) - master 进程收到消息
+    - worker - [cluster.Worker](https://nodejs.org/api/cluster.html#cluster_class_worker) - 消息的来源 worker 进程实例
+    - msg - Object - 收到的消息内容
+
+<div style="height:10px;"></div>
+<div id="workerprocess" style="height:1px;"></div>
+
+### **WorkerProcess 类**
+
+- #### 属性
+  - id - Number - worker 进程 id
+  - isMaster - Boolean - 当然是 false 了
+  - isWorker - Boolean - 当然是 true 了
+  - process - [ChildProcess](https://nodejs.org/api/child_process.html#child_process_class_childprocess) - 同 [worker.process](https://nodejs.org/api/cluster.html#cluster_worker_process)
+
+- #### 方法
+  - disconnect() - 同 [worker.disconnect()](https://nodejs.org/api/cluster.html#cluster_worker_disconnect) - 当前 worker 进程将自己与 master 进程断开连接
+  - isConnected() - 同 [worker.isConnected()](https://nodejs.org/api/cluster.html#cluster_worker_isconnected) - 返回当前 worker 进程与 master 进程的连接状态
+    - returns - Boolean
+  - isDead() - 同 [worker.isDead()](https://nodejs.org/api/cluster.html#cluster_worker_isdead) - 当前 worker 进程是否已经终止
+    - returns - Boolean
+  - suicide() - 同 [worker.kill()](https://nodejs.org/api/cluster.html#cluster_worker_kill_signal_sigterm) - 当前 worker 进程自行终止
+  - sendMsg2Master(msg) - 发送消息到 master 进程
+    - msg - Object - 要发送的内容
+    - returns - Boolean
+
+- #### 事件
+  - on('online',()=>{}) - 当前 worker 进程已经准备好
+  - on('listening',(address)=>{}) - 当前 worker 进程开始侦听端口，仅限 net 相关模块才有用
+    - address - [Event:'listening'](https://nodejs.org/api/cluster.html#cluster_event_listening_1) - 侦听地址信息
+  - on('message',(msg)=>{}) - 当前 worker 进程收到消息
+    - msg - Object - 消息内容
+  - on('error',(err)=>{}) - 一个跟进程 fork 相关的错误被抛出
+    - err - Error - 被捕捉到的错误
+  - on('disconnect',()=>{}) - 当前 worker 进程断开了与 master 进程的连接
+  - on('exit',(code,signal)=>{}) - 当前进程挂掉了
+    - code - Number - 退出代码
+    - signal - String - 当前 worker 进程退出时的信号码
+
+<div style="height:20px;"></div>
 
 ## **Examples**
 
@@ -202,5 +266,7 @@ Examples 目录里面我提供了几个例子来解释和说明跟这个模块�
   - multiProcess2.js - 演示用 multi-process 模块来实现相同功能的注册回调代码模式
   - fibonacci1.js - 演示单进程斐波那契运算
   - fibonacci1.js - 演示用 multi-process 模块实现多进程加速斐波那契运算
+
+<div style="height:20px;"></div>
 
 ### 希望这个模块能帮到大家！

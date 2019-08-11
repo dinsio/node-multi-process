@@ -6,10 +6,11 @@ const cpus = require('os').cpus().length
 
 if (multi_process.current.isMaster) {
     let counter = 0
-    multi_process.master.on('message', function(worker,obj){
+    let master = multi_process.current
+    master.on('message', function(worker,obj){
         console.log('master received from worker ' + worker.id + ' :',obj)
         console.log('master send msg back to worker ' + worker.id)
-        multi_process.master.sendMsg2Worker('456',worker)
+        master.sendMsg2Worker('456',worker)
         if (obj === '123') counter++
         if (counter === cpus) process.exit()
     })
@@ -20,9 +21,10 @@ if (multi_process.current.isMaster) {
 }
 
 if (multi_process.current.isWorker) {
-    console.log('worker',multi_process.worker.id,'created')
-    multi_process.worker.on('message', function(msg){
-        console.log('worker ' + multi_process.worker.id + ' received:',msg)
+    let worker = multi_process.current
+    console.log('worker',worker.id,'created')
+    worker.on('message', function(msg){
+        console.log('worker ' + worker.id + ' received:',msg)
     })
-    multi_process.worker.sendMsg2Master('123')
+    worker.sendMsg2Master('123')
 }
