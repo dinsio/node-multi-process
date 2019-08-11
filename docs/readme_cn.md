@@ -6,7 +6,7 @@ A wrapper for nodejs official module 'cluster'. This will save your ass from the
 
 ### **[English Document Is Here](https://github.com/dinsio/node-multi-process/blob/master/README.md)**
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **官方自带的 cluster 模块 API 太烂了!**
 
@@ -16,7 +16,7 @@ A wrapper for nodejs official module 'cluster'. This will save your ass from the
 
 或者你就直接继续往下看 multi-process 的使用方法吧！
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **multi-process 的安装**
 
@@ -28,7 +28,7 @@ A wrapper for nodejs official module 'cluster'. This will save your ass from the
 
 请注意 multi-process 这个包 ***只能在 nodejs 下使用!*** 至于 nodejs 版本倒是没什么特别的要求，因为我这里只是重新封装了 cluster，并无其它依赖，而 cluster 很久以前就出现在 nodejs 的早期版本中了。但是考虑到 message 事件回调函数的参数一致性，***nodejs 6.0+ 是必须的***。
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **怎么用？**
 
@@ -96,7 +96,7 @@ multi_process.onWorkerRun(function(worker){
 
 就像你看到的那样，我唯一做的一件事就是让代码更语义化更有逻辑了，希望你也喜欢这个风格
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **真实用例 - 斐波那契数列**
 
@@ -152,17 +152,19 @@ multi_process.onWorkerRun(function(worker){
 
 #### 结果: 大约耗时 25s, 性能表现有了非常明显的提升！
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **My APIS**
 
 首先说明一下，我并没有对官方自带的 cluster 进行太多改动。只是给它重新梳理了一下 api，加入了一些属性、方法、引用，使得它看起来更加语义化和符合直觉。
 
-看这里!
+你应该先了解下面的内容，它会帮助你更好的理解 multi-process!
 
-当你在你的代码中执行 require('multi-process') 的时候，你实际上得到了一个 [MultiProcess](#multiprocess) 的实例，而它实际上是一个多进程管理器，API 如下：
+> 为了解决语义化的问题，我首先分析了官方 'cluster' 模块的 API 并对它们进行分类，然后通过重新规划 API 的方式分别创建了 3 个类，**[MultiProcess](#multiprocess)**, **[MasterProcess](#masterprocess)** 和 **[WorkerProcess](#workerprocess)**。这样我们总算拥有了一套有着很好语义化而且不会让你混乱的类和 API 了。
 
-<div style="height:10px;"></div>
+> 当你在代码中执行 require('multi-process') 时，实际上你获得的是一个 **[MultiProcess 类](#multiprocess)** 的实例，把它看做一个多进程管理器即可。 属性 ***MultiProcess.current*** 是对当前正在运行的进程实例的引用，当前进程要么是一个 master 进程，要么是一个 worker 进程，我会根据类型把它包装成一个 MasterProcess 或 WorkerProcess 实例，然后让 MultiProcess.current 引用这个实例，这样我们基本上只要操作这个 ***MultiProcess.current*** 就可以了。
+
+<div style="height:20px;"></div>
 <div id="multiprocess" style="height:1px;"></div>
 
 ### **MultiProcess 类**
@@ -195,7 +197,7 @@ multi_process.onWorkerRun(function(worker){
     - settings - [cluster.settings](https://nodejs.org/api/cluster.html#cluster_cluster_settings) - 设置的内容
   - on('disconnect',()=>{}) - 所有 worker 进程都已断开连接
 
-<div style="height:10px;"></div>
+<div style="height:20px;"></div>
 <div id="masterprocess" style="height:1px;"></div>
 
 ### **MasterProcess 类**
@@ -216,7 +218,7 @@ multi_process.onWorkerRun(function(worker){
     - worker - [cluster.Worker](https://nodejs.org/api/cluster.html#cluster_class_worker) - 消息的来源 worker 进程实例
     - msg - Object - 收到的消息内容
 
-<div style="height:10px;"></div>
+<div style="height:20px;"></div>
 <div id="workerprocess" style="height:1px;"></div>
 
 ### **WorkerProcess 类**
@@ -251,7 +253,7 @@ multi_process.onWorkerRun(function(worker){
     - code - Number - 退出代码
     - signal - String - 当前 worker 进程退出时的信号码
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **Examples**
 
@@ -267,6 +269,6 @@ Examples 目录里面我提供了几个例子来解释和说明跟这个模块�
   - fibonacci1.js - 演示单进程斐波那契运算
   - fibonacci1.js - 演示用 multi-process 模块实现多进程加速斐波那契运算
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ### 希望这个模块能帮到大家！

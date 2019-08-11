@@ -6,7 +6,7 @@ A better wrapper for nodejs official module 'cluster'. This will save your ass f
 
 ### **[中文版文档点这里](https://github.com/dinsio/node-multi-process/blob/master/docs/readme_cn.md)**
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **Module 'cluster' sucks!**
 
@@ -16,7 +16,7 @@ Why nodejs official module 'cluster' sucks? it's a long story, so if you are int
 
 or let's skip to multi-process directly!
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **multi-process Installation**
 
@@ -28,7 +28,7 @@ or
 
 You should notice that multi-process module is ***available in nodejs only!*** As for versions supported, the 'cluster' module came out very early, but for the 'message' event callback function parameters concern, ***nodejs 6.0+ is required***.
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **How To Use**
 
@@ -96,7 +96,7 @@ multi_process.onWorkerRun(function(worker){
 
 As you can see, the only thing i did is to make codes more logical and more semantic. Hope you will enjoy it.
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **A Real World Usage - Fibonacci Runner**
 
@@ -152,7 +152,7 @@ multi_process.onWorkerRun(function(worker){
 
 #### Result: about 25s, A good performance improvement!
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **My APIS**
 
@@ -160,11 +160,13 @@ First of all, you should know i didn't change the original 'cluster' too much!
 
 I only added some properties, some methods, some references, just to make the whole thing looks more semantic and more intuitive.
 
-Here We Go!
+Here is something you should know about, this will help you to understand multi-process!
 
-When you require('multi-process') in your code, you actually get an instance of [MultiProcess](#multiprocess), which is a multiple process manager.
+> To solve the semanticization problems, i first analyzed the original 'cluster' module APIs and classify them, after that i created 3 classes, **[Class MultiProcess](#multiprocess)**, **[Class MasterProcess](#masterprocess)** and **[Class WorkerProcess](#workerprocess)** by reassigning proper APIs to proper class, finally we have 3 brand new classes with semantic and intuitive APIs. 
 
-<div style="height:10px;"></div>
+> When you execute require('multi-process') in your code, you actually get an instance of **[Class MultiProcess](#multiprocess)**, which should be considered as a multiple process manager. Property ***MultiProcess.current*** is a reference to the process you are running, it may be either a master process or a worker process, in either case, i will wrap the current process to an instance of MasterProcess or WorkerProcess based on it's type, and then refer MultiProcess.current to this instance. From now on we can do almost anything by operating ***MultiProcess.current*** only.
+
+<div style="height:20px;"></div>
 <div id="multiprocess" style="height:1px;"></div>
 
 ### **Class MultiProcess**
@@ -197,7 +199,7 @@ When you require('multi-process') in your code, you actually get an instance of 
     - settings - [cluster.settings](https://nodejs.org/api/cluster.html#cluster_cluster_settings) - the new settings content
   - on('disconnect',()=>{}) - all worker processes disconnected
 
-<div style="height:10px;"></div>
+<div style="height:20px;"></div>
 <div id="masterprocess" style="height:1px;"></div>
 
 ### **Class MasterProcess**
@@ -218,7 +220,7 @@ When you require('multi-process') in your code, you actually get an instance of 
     - worker - [cluster.Worker](https://nodejs.org/api/cluster.html#cluster_class_worker) - the worker process who send you this message
     - msg - Object - message content
 
-<div style="height:10px;"></div>
+<div style="height:20px;"></div>
 <div id="workerprocess" style="height:1px;"></div>
 
 ### **Class WorkerProcess**
@@ -253,7 +255,7 @@ When you require('multi-process') in your code, you actually get an instance of 
     - code - Number - the exit code
     - signal - String - the name of the signal that caused the process to be exited
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ## **Examples**
 
@@ -269,6 +271,6 @@ I provided several examples to explain every thing about this module, you can fi
   - fibonacci1.js - how to run a fibonacci runner in single-process mode
   - fibonacci1.js - how to run a fibonacci runner in multi-process mode
 
-<div style="height:20px;"></div>
+<div style="height:40px;"></div>
 
 ### Hope it is helpful to you guys !
